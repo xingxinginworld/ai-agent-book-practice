@@ -5,6 +5,8 @@
 > 原书配套代码见作者仓库 [bojieli/ai-agent-book](https://github.com/bojieli/ai-agent-book)（已开源）。
 > 本仓库在其基础上，按"实验 X-Y"逐实验产出**精简可运行 + 中文逐行注释**版本，并记录跟练过程，用于学习沉淀与公众号连载。
 
+> 本仓库是「FDE / AI 综合学习集」的**独立子集**，与 [xx-fde-learning](https://github.com/<你的GitHub用户名>/xx-fde-learning) 相互交叉引用、各自独立开源。
+
 ## 跟练约定
 - 每个实验一个目录：`experiments/chXX/expX-Y/README.md`，内含：目标 → 前置 → 环境 → 分步 → 核心代码+注释 → 备注/踩坑 → 公众号记录要点。
 - **三档**：🔵 必做（本地轻量可实跑）· 🟡 选做（需外部 API/云密钥）· ⚪ 观察（需 GPU 训练或专用硬件，先理解不实跑）。
