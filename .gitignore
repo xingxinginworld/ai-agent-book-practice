@@ -4,3 +4,6 @@ gzh_wz/
 # Python 缓存
 __pycache__/
 *.pyc
+
+# 个人练习区（每个实验下的 test 目录），不随代码仓库上传
+**/test/
