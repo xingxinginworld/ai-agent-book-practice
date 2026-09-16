@@ -65,7 +65,7 @@ python main.py --backend ollama --info
    - 若模型产出 `tool_calls` → 解析参数 → 执行工具 → 把「assistant(tool_calls) + tool 结果」回灌 `messages` → 再请求下一轮；
    - 若无 `tool_calls` → 本轮即最终回答，结束。
 
-增强：本 `main.py` 额外内置 (a) 一段约 200 token 的 `SYSTEM_PROMPT` 作为「长共享前缀」；(b) 每轮打印 `⏱ TTFT(首 token 延迟)`。同一进程内对比第 1 轮 / 第 2 轮的 TTFT 即可观察前缀复用；跨多次 `python main.py` 是独立进程，KV 不共享，看不到差异属正常。
+增强：本 `main.py` 额外内置 (a) 一段约 200 token 的 `SYSTEM_PROMPT` 作为「长共享前缀」；(b) 每轮打印 `⏱ TTFT(首 token 延迟)`；(c) 捕获 Qwen3 原生思考 `reasoning_content` 并实时打印 `🧠 思考: ...`，让「模型在想什么」可见。同一进程内对比第 1 轮 / 第 2 轮的 TTFT 即可观察前缀复用；跨多次 `python main.py` 是独立进程，KV 不共享，看不到差异属正常。
 
 运行：
 
@@ -77,7 +77,7 @@ python main.py                            # 默认问 "What's the weather in Tok
 
 ## 七、关键机制注解
 
-- **输出顺序**：支持 CoT 的模型（如 Qwen3）先输出 `<think>` 思考（分析意图、评估工具、规划顺序），再输出给用户的文本，最后才是 `tool_call` 请求。理解顺序对实现流式响应很关键——`<think>` 出现即切「思考中」状态，首个工具参数校验通过即可并行执行。
+- **输出顺序**：支持 CoT 的模型（如 Qwen3）先输出 `<think>` 思考（分析意图、评估工具、规划顺序），再输出给用户的文本，最后才是 `tool_call` 请求。理解顺序对实现流式响应很关键——`<think>` 出现即切「思考中」状态，首个工具参数校验通过即可并行执行。**本目录 `main.py` 已单独捕获 `reasoning_content` 并打印 `🧠 思考:` 前缀**，运行 `python main.py` 即可实时看见思考过程；若模型对极简单问题不输出思考（如 0.6B 直接调工具）、或 Ollama 关闭了 think，则不显示，属正常。
 - **并行工具调用**：模型发现子问题间无依赖（如温哥华时间 + 天气），会在一次输出里同时生成多个 `tool_call`，框架可并行执行加速。
 - **终止判断**：工具结果送回后，模型自行判断是否信息足够；足够则输出最终回复（不含工具调用），否则继续产出新的 `tool_call` 进入下一轮。
 - **工具调用 JSON 结构（OpenAI 兼容）**：

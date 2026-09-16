@@ -13,11 +13,13 @@
     bojieli/ai-agent-book/chapter2/local_llm_serving（含流式富文本、benchmark、
     多工具、vLLM 路径等）。生产/完整体验请走官方项目。
 
-    本版本额外内置两个练习增强：
+    本版本额外内置三个练习增强：
     - 一段约 200 token 的系统提示词 SYSTEM_PROMPT，作为「长共享前缀」，
       用于直观体会 KV Cache / prefix caching 对首 token 延迟(TTFT)的影响；
     - 每轮打印 TTFT（Time To First Token，首 token 延迟），
-      同一进程内对比第 1 轮 / 第 2 轮即可观察前缀复用效果。
+      同一进程内对比第 1 轮 / 第 2 轮即可观察前缀复用效果；
+    - 捕获 Qwen3 原生思考输出（reasoning_content），实时打印「🧠 思考: ...」，
+      让「模型在想什么」可见（否则默认只在 content 里取，思考会被静默丢掉）。
 """
 
 from openai import OpenAI
@@ -28,6 +30,21 @@ from datetime import datetime
 # 时间戳工具：练习时用于观察「思考→调用→观察→回答」各阶段的耗时
 def _ts() -> str:
     return datetime.now().strftime("%H:%M:%S.%f")[:-3]
+
+
+# 鲁棒地取出模型「思考」内容：Qwen3 原生思考经 OpenAI 兼容接口以
+# reasoning_content 透出；不同版本 SDK 可能放在 reasoning / model_extra。
+def _reasoning_of(delta) -> str:
+    r = getattr(delta, "reasoning_content", None)
+    if r:
+        return r
+    r = getattr(delta, "reasoning", None)
+    if r:
+        return r
+    me = getattr(delta, "model_extra", None)
+    if isinstance(me, dict):
+        return me.get("reasoning_content") or me.get("reasoning") or ""
+    return ""
 
 
 # ---- 1. 连接本地 Ollama 的 OpenAI 兼容端点 ----
@@ -102,14 +119,28 @@ def run(user_msg: str, max_turns: int = 5) -> str:
         name = None           # 工具名
         args_str = ""         # 工具参数字符串（JSON 分片拼接）
         ttft = None           # 首 token 延迟 Time To First Token
+        thinking_started = False
         for chunk in stream:
             delta = chunk.choices[0].delta
-            # 首个携带内容的 chunk 到达 = 模型吐出第一个 token（TTFT 终点）
-            if ttft is None and (delta.content or delta.tool_calls):
+            reasoning = _reasoning_of(delta)
+            # 首个携带任何输出的 chunk 到达 = 模型吐出第一个 token（TTFT 终点）
+            if ttft is None and (delta.content or delta.tool_calls or reasoning):
                 ttft = (datetime.now() - t_req).total_seconds()
+            # 1) 原生思考（Qwen3 的 <think> 内容）：经 OpenAI 兼容接口以
+            #    reasoning_content 透出，必须单独打印，否则「思考」会被静默丢掉
+            if reasoning:
+                if not thinking_started:
+                    print("\n  🧠 思考:", end="", flush=True)
+                    thinking_started = True
+                print(reasoning, end="", flush=True)
+            # 2) 给用户的文本（思考结束后的正式回答/过渡）
             if delta.content:
+                if thinking_started:
+                    print()          # 思考结束，换行再打正文
+                    thinking_started = False
                 content += delta.content
-                print(delta.content, end="", flush=True)   # 实时打印思考
+                print(delta.content, end="", flush=True)
+            # 3) 工具调用
             if delta.tool_calls:
                 tc = delta.tool_calls[0]
                 if tc.function.name:
