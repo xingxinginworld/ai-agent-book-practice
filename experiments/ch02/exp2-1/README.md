@@ -14,7 +14,7 @@
 2. **性能表现**：作者 M2 芯片上 >100 token/s，对实时交互完全够用。
 3. **ReAct 循环**：模型通过多轮「思考—行动—观察」解决复杂问题。
 4. **流式响应**：实时看到模型思考、工具调用决策、结果处理。
-5. **KV Cache 伏笔（关键）**：保持系统提示词不变，连续两次对话，第二次首 token 延迟明显更低；改动系统提示词开头任意字符后再对话，延迟变高、成本上升——这正是下一节「KV Cache 友好的上下文设计」的引子。
+5. **KV Cache 伏笔（关键，但有前提）**：若服务端开启 prefix caching、且系统提示词（共享前缀）足够长，保持前缀不变连续两次对话，第二次首 token 延迟（TTFT）会明显更低；改动前缀任意字符后再对话，缓存失效、延迟变高、成本上升——这正是下一节「KV Cache 友好的上下文设计」的引子。注意：默认 Ollama + 极短/无系统提示词时，这个差异可能小到看不见（见第八节踩坑）。本目录 `main.py` 已内置 TTFT 测量，可亲手验证。
 
 ## 三、前置条件
 
@@ -65,6 +65,8 @@ python main.py --backend ollama --info
    - 若模型产出 `tool_calls` → 解析参数 → 执行工具 → 把「assistant(tool_calls) + tool 结果」回灌 `messages` → 再请求下一轮；
    - 若无 `tool_calls` → 本轮即最终回答，结束。
 
+增强：本 `main.py` 额外内置 (a) 一段约 200 token 的 `SYSTEM_PROMPT` 作为「长共享前缀」；(b) 每轮打印 `⏱ TTFT(首 token 延迟)`。同一进程内对比第 1 轮 / 第 2 轮的 TTFT 即可观察前缀复用；跨多次 `python main.py` 是独立进程，KV 不共享，看不到差异属正常。
+
 运行：
 
 ```bash
@@ -93,7 +95,7 @@ python main.py                            # 默认问 "What's the weather in Tok
 - **原生 Windows 只能用 Ollama**：vLLM 官方仅支持 Linux，Windows 需走 WSL2 或 Linux 容器。
 - **Ollama 版本**：`qwen3:0.6b` 需要较新的 Ollama 才支持**原生工具调用**；老版本可能退化成文本里吐函数名，导致解析失败。
 - **流式聚合**：`tool_calls` 在流里是分片增量 JSON，需把每段 `arguments` 字符串拼接后再 `json.loads`。
-- **KV Cache 观察实验**：在 `main.py` 里连发两次相同问题，记录第二次 TTFT；再改一行系统提示词前缀重发，对比延迟——直观感受「前缀稳定 = 缓存命中」。
+- **KV Cache 观察实验（须明前提）**：本 `main.py` 已内置 TTFT 测量（每轮打印 `⏱ TTFT`）。同一进程内对比第 1 轮 vs 第 2 轮的 TTFT 才有意义；跨多次 `python main.py` 是三个独立进程，KV 不共享，自然「差不多」。要想稳定看到「第二次明显更低」，需要 (a) 较长的共享前缀（脚本已内置约 200 token 系统提示词）且 (b) 服务端开启 prefix caching（如 vLLM `--enable-prefix-caching`）。Ollama 默认跨请求未必缓存前缀；若把系统提示词清空/改短，差异也会立刻消失。
 
 ## 九、公众号记录要点（写作线索）
 
