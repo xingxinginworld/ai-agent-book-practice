@@ -9,3 +9,8 @@ __pycache__/
 my-test/
 # 各实验下的 test 目录同样不随代码仓库上传（安全网）
 **/test/
+
+# 内部脚手架（盘点/生成脚本与中间数据），仅本地保留，不随仓库上传
+_gen_inventory.py
+_gen_readme.py
+_records.json
