@@ -14,3 +14,8 @@ my-test/
 _gen_inventory.py
 _gen_readme.py
 _records.json
+
+# 密钥配置文件（含 API Key，严禁提交；用 .env.example 作为模板）
+.env
+.env.local
+
