@@ -15,6 +15,9 @@ _gen_inventory.py
 _gen_readme.py
 _records.json
 
+# Agent 工作目录（含本地绝对路径与内部跟练笔记），仅本地保留，不随仓库上传
+.workbuddy/
+
 # 密钥配置文件（含 API Key，严禁提交；用 .env.example 作为模板）
 .env
 .env.local

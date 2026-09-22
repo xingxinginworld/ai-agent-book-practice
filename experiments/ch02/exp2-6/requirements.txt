@@ -1,0 +1,4 @@
+openai>=1.0
+python-dotenv>=1.0
+# 可选：读取 PDF 论文时需要；仅当输入为 .pdf 才用到，纯文本/示例论文无需安装
+pypdf>=4.0
