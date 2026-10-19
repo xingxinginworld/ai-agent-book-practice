@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>稀疏注意力在长文本理解中的有效性研究</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --accent: #38bdf8; --text: #e2e8f0;
+    --muted: #94a3b8; --card: #172033;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  #deck { position: relative; height: 100vh; overflow: hidden; }
+  .slide { position: absolute; inset: 0; display: none; flex-direction: column;
+    padding: 6vh 8vw; }
+  .slide.active { display: flex; }
+  .slide-kicker { color: var(--accent); letter-spacing: .15em; font-size: 14px;
+    text-transform: uppercase; margin-bottom: 12px; }
+  .slide-title { font-size: clamp(24px, 4.2vw, 48px); font-weight: 700; line-height: 1.2;
+    margin: 0 0 28px; }
+  .slide-body { font-size: clamp(16px, 2.2vw, 26px); line-height: 1.7; }
+  .slide-body ul { padding-left: 1.1em; margin: 0; }
+  .slide-body li { margin: 10px 0; }
+  .meta { color: var(--muted); font-size: clamp(13px, 1.6vw, 18px); }
+  .cover { justify-content: center; }
+  .cover .slide-title { font-size: clamp(28px, 5vw, 60px); }
+  .bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; align-items: center;
+    justify-content: space-between; padding: 10px 18px; background: var(--panel);
+    border-top: 1px solid #334155; font-size: 14px; color: var(--muted); z-index: 5; }
+  .bar button { background: var(--accent); color: #06283d; border: 0; border-radius: 6px;
+    padding: 6px 14px; font-size: 14px; cursor: pointer; }
+  .bar button:disabled { opacity: .4; cursor: default; }
+  .counter { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div id="deck">
+
+  <section class="slide cover">
+    <div class="slide-kicker">论文汇报 · 自动生成</div>
+    <h1 class="slide-title">稀疏注意力在长文本理解中的有效性研究</h1>
+    <div class="meta">作者：张三、李四、王五　出处：ACL 2024</div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-kicker">Slide 1</div>
+    <h2 class="slide-title">研究背景与问题</h2>
+    <div class="slide-body"><ul><li>大语言模型处理长文本面临计算与显存瓶颈</li><li>标准自注意力机制随上下文长度增长呈二次开销</li><li>现有方案在长文档场景下难以兼顾精度与效率</li></ul></div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-kicker">Slide 2</div>
+    <h2 class="slide-title">核心问题：局部与全局的矛盾</h2>
+    <div class="slide-body"><ul><li>块内语义需要稠密全注意力</li><li>跨块连接只需捕捉关键相似块</li><li>如何统一两类连接是关键挑战</li></ul></div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-kicker">Slide 3</div>
+    <h2 class="slide-title">方法：块稀疏注意力 BSA</h2>
+    <div class="slide-body"><ul><li>输入按固定大小分块，块内执行稠密注意力</li><li>块间仅保留 top-k 相似块对进行稀疏跨块注意力</li><li>可学习路由自动决定哪些块对需要连接</li></ul></div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-kicker">Slide 4</div>
+    <h2 class="slide-title">关键创新：可学习路由与稀疏度正则</h2>
+    <div class="slide-body"><ul><li>路由端到端学习最优连接方式</li><li>稀疏度正则项自动权衡精度与开销</li><li>统一了局部与远距离两种连接范式</li></ul></div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-kicker">Slide 5</div>
+    <h2 class="slide-title">实验验证：6个基准上的有效性</h2>
+    <div class="slide-body"><ul><li>在 LongBench 上精度仅下降 0.8%，显存降低 60%</li><li>128k 上下文下单卡可部署，稠密注意力 OOM</li><li>可学习路由比固定稀疏模式平均高 2.3 个百分点</li></ul></div>
+  </section>
+
+  <section class="slide">
+    <div class="slide-kicker">Slide 6</div>
+    <h2 class="slide-title">结论与启示</h2>
+    <div class="slide-body"><ul><li>BSA 以很小的精度代价换来数量级部署可行性提升</li><li>为长文本大模型提供了高效架构思路</li><li>稀疏注意力范式可扩展至更大规模模型</li></ul></div>
+  </section>
+
+</div>
+<div class="bar">
+  <button id="prev">← 上一页</button>
+  <span class="counter"><span id="cur">1</span> / <span id="total">1</span></span>
+  <button id="next">下一页 →</button>
+</div>
+<script>
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var idx = 0;
+  function show(i){{
+    idx = Math.max(0, Math.min(slides.length-1, i));
+    slides.forEach(function(s,k){{ s.classList.toggle('active', k===idx); }});
+    document.getElementById('cur').textContent = idx+1;
+    document.getElementById('prev').disabled = idx===0;
+    document.getElementById('next').disabled = idx===slides.length-1;
+  }}
+  document.getElementById('prev').onclick = function(){{ show(idx-1); }};
+  document.getElementById('next').onclick = function(){{ show(idx+1); }};
+  document.addEventListener('keydown', function(e){{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){{ show(idx+1); }}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){{ show(idx-1); }}
+    else if(e.key==='Home'){{ show(0); }}
+    else if(e.key==='End'){{ show(slides.length-1); }}
+    else if(e.key==='f'||e.key==='F'){{ if(!document.fullscreenElement){{document.documentElement.requestFullscreen();}} else {{document.exitFullscreen();}} }}
+  }});
+  show(0);
+</script>
+</body>
+</html>
