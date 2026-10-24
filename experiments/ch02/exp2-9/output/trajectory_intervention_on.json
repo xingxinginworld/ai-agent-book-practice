@@ -1,0 +1,92 @@
+{
+  "task": "请先搜索'注意力机制'的资料，再计算 25×37，最后用 final_answer 给出一句结论。",
+  "config": {
+    "enable_timestamps": true,
+    "enable_tool_counter": true,
+    "enable_todo_list": true,
+    "enable_detailed_errors": true,
+    "enable_system_state": true
+  },
+  "state": {
+    "now": "2026-10-24T20:57:36.132931",
+    "tool_calls": {
+      "search": 1,
+      "calculate": 1
+    },
+    "todos": [
+      {
+        "id": 1,
+        "text": "搜索资料",
+        "status": "completed"
+      },
+      {
+        "id": 2,
+        "text": "计算 25×37",
+        "status": "completed"
+      },
+      {
+        "id": 3,
+        "text": "给出结论",
+        "status": "in_progress"
+      }
+    ]
+  },
+  "history": [
+    {
+      "role": "assistant",
+      "content": "{\"action\": \"search\", \"args\": {\"query\": \"注意力机制 资料\"}}"
+    },
+    {
+      "role": "user",
+      "content": "[工具 search 返回] 关于『注意力机制 资料』的资料摘要：注意力机制让模型对不同位置动态分配权重，近期研究强调其在长文本与工具调用场景下的关键作用。"
+    },
+    {
+      "role": "assistant",
+      "content": "{\"action\": \"calculate\", \"args\": {\"expr\": \"25×37\"}}"
+    },
+    {
+      "role": "user",
+      "content": "[工具 calculate 返回] 25×37 = 925"
+    },
+    {
+      "role": "assistant",
+      "content": "{\"action\": \"final_answer\", \"text\": \"注意力机制是深度学习中的关键技术，使模型能够动态聚焦输入中最相关的信息。数学上，25×37等于925。\"}"
+    }
+  ],
+  "metrics": {
+    "iterations": 3,
+    "tool_calls": {},
+    "loops": 0,
+    "success": true,
+    "trace": [
+      {
+        "iter": 0,
+        "action": {
+          "action": "search",
+          "args": {
+            "query": "注意力机制 资料"
+          }
+        },
+        "raw": "{\"action\": \"search\", \"args\": {\"query\": \"注意力机制 资料\"}}"
+      },
+      {
+        "iter": 1,
+        "action": {
+          "action": "calculate",
+          "args": {
+            "expr": "25×37"
+          }
+        },
+        "raw": "{\"action\": \"calculate\", \"args\": {\"expr\": \"25×37\"}}"
+      },
+      {
+        "iter": 2,
+        "action": {
+          "action": "final_answer",
+          "text": "注意力机制是深度学习中的关键技术，使模型能够动态聚焦输入中最相关的信息。数学上，25×37等于925。"
+        },
+        "raw": "{\"action\": \"final_answer\", \"text\": \"注意力机制是深度学习中的关键技术，使模型能够动态聚焦输入中最相关的信息。数学上，25×37等于925。\"}"
+      }
+    ]
+  }
+}
